@@ -1,5 +1,7 @@
 import smtplib
-
+def wyswietlenie(studentList):
+    for students in studentList:
+        print(f'{students}')
 
 def ocena(student):
     value = int(student["punkty"])
@@ -33,7 +35,7 @@ with open(filepath) as file_object:
             student_List.append(student(x[0], x[1], x[2], x[3], ''))
         else:
             student_List.append(student(x[0], x[1], x[2], x[3], x[4]))
-print(student_List)
+print(wyswietlenie(student_List))
 
 for line in student_List:
     if line["status"].upper() != 'GRADED' and line["status"].upper() != 'MAILED':
