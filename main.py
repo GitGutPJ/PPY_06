@@ -1,9 +1,40 @@
 import smtplib
+
+
 def wyswietlenie(studentList):
     for students in studentList:
         print(f'{students}')
 
-def ocena(student):
+
+def wczytaj():
+    student_List = []
+    filepath = "students.txt"
+    with open(filepath, 'r') as file_object:
+        for line in file_object:
+            x = line.rstrip().split(',')
+            if len(x) == 4:
+                student_List.append(getStudent(x[0], x[1], x[2], x[3], '', ''))
+            elif len(x) == 5:
+                student_List.append(getStudent(x[0], x[1], x[2], x[3], x[4], ''))
+            else:
+                student_List.append(getStudent(x[0], x[1], x[2], x[3], x[4], x[5]))
+    file_object.close()
+    return student_List
+
+
+def zapisz(student_List):
+    filepath = "students.txt"
+    with open(filepath,'w') as file_object:
+        for students in student_List:
+            if students["ocena"] is None:
+                students["ocena"] = ''
+            if students["status"] is None:
+                students["status"] = ''
+            line = f'{students["email"]},{students["imie"]},{students["nazwisko"]},{students["punkty"]},{students["ocena"]},{students["status"]}\n'
+            file_object.write(line)
+    file_object.close()
+
+def autoOcena(student):
     value = int(student["punkty"])
     if value <= 50:
         return 2
@@ -19,48 +50,60 @@ def ocena(student):
         return 5
 
 
-def student(v1, v2, v3, v4, v5):
-    students = {"email": v1, "imie": v2, "nazwisko": v3, "punkty": v4, "status": v5}
+def addStudent(studentList):
+    line = input("Podaj studenta w nastepujacy sposob: email,imie,nazwisko,punkty,(opcjonalne)ocena,(opcjonalne)status")
+    line = line.rstrip().split(',')
+    if line[0] in [students['email'] for students in student_List]:
+        print("Jest taki email, powrot do opcji wyboru")
+    if len(line) < 4:
+        print("Podano za malo informacji, powrot do opcji wyboru")
+    elif len(line) == 4:
+        return studentList.append(getStudent(line[0], line[1], line[2], line[3], '', ''))
+    elif len(line) == 4:
+        return studentList.append(getStudent(line[0], line[1], line[2], line[3], line[4], ''))
+    else:
+        return studentList.append(getStudent(line[0], line[1], line[2], line[3], line[4], line[5]))
+
+
+def deleteStudent(studentList):
+    line = input("Podaj email studenta")
+    for students in studentList:
+        if line == students["email"]:
+            studentList.pop(students)
+            return studentList
+    return studentList
+
+
+def getStudent(v1, v2, v3, v4, v5, v6):
+    students = {"email": v1, "imie": v2, "nazwisko": v3, "punkty": v4, "ocena": v5, "status": v6}
     return students
 
 
 decision = 'T'
 i = 0
-student_List = []
-filepath = "students.txt"
-with open(filepath) as file_object:
-    for line in file_object:
-        x = line.rstrip().split(',')
-        if len(x) <= 4:
-            student_List.append(student(x[0], x[1], x[2], x[3], ''))
-        else:
-            student_List.append(student(x[0], x[1], x[2], x[3], x[4]))
-print(wyswietlenie(student_List))
-
-for line in student_List:
-    if line["status"].upper() != 'GRADED' and line["status"].upper() != 'MAILED':
-        print(ocena(line))
-decision2 = ''
-print("Czy chcesz dodac/usunac uzytkownika")
+student_List = wczytaj()
 while decision == 'T':
-    if decision == 'T':
-        print("D - dodanie, U - usuniecie")
-        decision2 = input()
-        if decision2 == 'D':
-            print("Podaj w nastepujacy sposob: email,imie,nazwisko,punkty")
-            line = input("")
-            line = line.rstrip().split(',')
-            if line[0] in [students['email'] for students in student_List]:
-                raise ValueError(f'Isnieje taki student')
-            else:
-                if len(line) <= 4:
-                    student_List.append(student(line[0], line[1], line[2], line[3], ''))
-                else:
-                    student_List.append(student(line[0], line[1], line[2], line[3], line[4]))
-        elif decision2 == 'U':
-            print("Podaj email")
-            line = input()
-            if line in [students['email'] for students in student_List]:
-                student_List.remove(__contains__(line))
+    decision2 = input("Wybierz nastepujace opcje:\n1: Wyswietl informacje o studentach\n2: Automatycznie wystaw "
+                      "oceny\n3: Dodaj/Usun studenta\n4: Wyslij maila\n5: Zakoncz dzialanie programu")
+    if decision2 == '1':
+        wyswietlenie(student_List)
+    elif decision2 == '2':
+        for student in student_List:
+            student["ocena"] = autoOcena(student)
+        zapisz(student_List)
+    elif decision2 == '3':
+        decision3 = input("D - dodanie, U - usuniecie")
+        if decision3 == 'D':
+            student_List = addStudent(student_List)
+        elif decision3 == 'U':
+            student_List = deleteStudent(student_List)
         else:
-            print("Bledna odpowiedz")
+            print("Nie wybrano wlasciwej opcji, powort do glownego menu")
+        zapisz(student_List)
+    elif decision2 == '4':
+        print("Wyslano maila")
+    elif decision2 == '5':
+        decision = 'N'
+        print("Program zakonczyl sie")
+    else:
+        print("Wybrano zla opcje, prosze dokonac ponownego wyboru")

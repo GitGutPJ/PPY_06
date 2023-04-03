@@ -1,3 +1,0 @@
-alfa@gmail.com,Robert,Maklowicz,51,graded
-beta@gmail.com,Kamil,Kamson,60,
-gamma@gmail.com,Ryszard,Jan,24,mailed
