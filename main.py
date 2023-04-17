@@ -1,4 +1,16 @@
 import smtplib
+from email.mime.text import MIMEText
+
+
+def send_email(subject, body, sender, recipients, password):
+    msg = MIMEText(body)
+    msg['Subject'] = subject
+    msg['From'] = sender
+    msg['To'] = ', '.join(recipients)
+    smtp_server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
+    smtp_server.login(sender, password)
+    smtp_server.sendmail(sender, recipients, msg.as_string())
+    smtp_server.quit()
 
 
 def wyswietlenie(studentList):
@@ -8,7 +20,7 @@ def wyswietlenie(studentList):
 
 def wczytaj():
     student_List = []
-    filepath = "students.txt"
+    filepath = "students0.txt"
     with open(filepath, 'r') as file_object:
         for line in file_object:
             x = line.rstrip().split(',')
@@ -23,8 +35,8 @@ def wczytaj():
 
 
 def zapisz(student_List):
-    filepath = "students.txt"
-    with open(filepath,'w') as file_object:
+    filepath = "students0.txt"
+    with open(filepath, 'w') as file_object:
         for students in student_List:
             if students["ocena"] is None:
                 students["ocena"] = ''
@@ -33,6 +45,7 @@ def zapisz(student_List):
             line = f'{students["email"]},{students["imie"]},{students["nazwisko"]},{students["punkty"]},{students["ocena"]},{students["status"]}\n'
             file_object.write(line)
     file_object.close()
+
 
 def autoOcena(student):
     value = int(student["punkty"])
@@ -53,24 +66,32 @@ def autoOcena(student):
 def addStudent(studentList):
     line = input("Podaj studenta w nastepujacy sposob: email,imie,nazwisko,punkty,(opcjonalne)ocena,(opcjonalne)status")
     line = line.rstrip().split(',')
-    if line[0] in [students['email'] for students in student_List]:
+    if line[0] in [students['email'] for students in studentList]:
         print("Jest taki email, powrot do opcji wyboru")
     if len(line) < 4:
         print("Podano za malo informacji, powrot do opcji wyboru")
+        return studentList
     elif len(line) == 4:
-        return studentList.append(getStudent(line[0], line[1], line[2], line[3], '', ''))
-    elif len(line) == 4:
-        return studentList.append(getStudent(line[0], line[1], line[2], line[3], line[4], ''))
+        studentList.append(getStudent(line[0], line[1], line[2], line[3], '', ''))
+        print("Pomyslnie dodano studenta")
+        return studentList
+    elif len(line) == 5:
+        studentList.append(getStudent(line[0], line[1], line[2], line[3], line[4], ''))
+        print("Pomyslnie dodano studenta")
+        return studentList
     else:
-        return studentList.append(getStudent(line[0], line[1], line[2], line[3], line[4], line[5]))
+        studentList.append(getStudent(line[0], line[1], line[2], line[3], line[4], line[5]))
+        print("Pomyslnie dodano studenta")
+        return studentList
 
 
 def deleteStudent(studentList):
     line = input("Podaj email studenta")
-    for students in studentList:
+    for i, students in enumerate(studentList):
         if line == students["email"]:
-            studentList.pop(students)
+            print("Usunieto pomyslnie studenta ", studentList.pop(i))
             return studentList
+    print("Nie ma studenta o takim emailu. Powrot do okna wyboru.")
     return studentList
 
 
@@ -89,7 +110,9 @@ while decision == 'T':
         wyswietlenie(student_List)
     elif decision2 == '2':
         for student in student_List:
-            student["ocena"] = autoOcena(student)
+            if student["status"] != 'GRADED' or student["status"] != 'MAILED':
+                student["ocena"] = autoOcena(student)
+                student["status"] = 'GRADED'
         zapisz(student_List)
     elif decision2 == '3':
         decision3 = input("D - dodanie, U - usuniecie")
@@ -101,7 +124,10 @@ while decision == 'T':
             print("Nie wybrano wlasciwej opcji, powort do glownego menu")
         zapisz(student_List)
     elif decision2 == '4':
-        print("Wyslano maila")
+        for student in student_List:
+            if student['status'] != 'MAILED':
+                send_email("Ocena", student["ocena"], student["email"], "przykladowyEmail@gmail.com", "hasloMaslo")
+                print("Wyslano maila do",student['imie'],student['nazwisko'])
     elif decision2 == '5':
         decision = 'N'
         print("Program zakonczyl sie")
